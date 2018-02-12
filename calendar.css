@@ -17,7 +17,7 @@ Calendar Body: #ececec
 */
 
 /* Side Bar */
-.calendar-side-bar {
+#calendar-side-bar {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -29,6 +29,7 @@ Calendar Body: #ececec
   color: #b6b6b6;
   text-align: right;
   white-space: nowrap;
+  padding: 0 10px;
 }
 
 .calendar-label:last-child {

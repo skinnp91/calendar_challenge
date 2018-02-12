@@ -1,4 +1,35 @@
 /**
+* renders calendar time labels
+*/
+function renderCalenderLabels() {
+  var label_wrapper = document.getElementById("calendar-side-bar");
+  var min_time = 9;
+  var max_time = 18;
+  for (var i = min_time; i <= max_time; i++) {
+    // Hour
+    var label_html = document.createElement("div");
+    label_html.classList.add("calendar-label");
+    var bold_time = document.createElement("span");
+    var am_pm_label = i > 11 ? " PM" : " AM";
+    bold_time.append(document.createTextNode(i%12 + ":00"));
+    var ampm = document.createTextNode(am_pm_label);
+    label_html.append(bold_time);
+    label_html.append(ampm);
+    label_wrapper.append(label_html);
+
+    // Half Hour
+    // Do not create on last time
+    if (i < max_time) {
+      label_html = document.createElement("div");
+      label_html.classList.add("calendar-label");
+      var time = document.createTextNode(i%12 + ":30" + am_pm_label);
+      label_html.append(time);
+      label_wrapper.append(label_html);
+    }
+  }
+}
+
+/**
 * Renders event elements on calendar
 *
 * @param array  events   An array of events with top, left, width, and height defined.
@@ -7,7 +38,6 @@
 */
 function renderCalendarEvents(events) {
   var calendar_body = document.getElementById("calendar-body");
-  console.log(events, "PHS");
   
   // create event
   for (var i = 0; i < events.length; i++) {
@@ -76,7 +106,7 @@ function layOutDay(events) {
     // Invalid Events are thrown out
     if (events[i].start >= events[i].end) {
       console.error("layOutDay: invalid event -- ", events[i].id);
-      break;
+      continue;
     }
     
     var event = {
@@ -169,4 +199,5 @@ function getCalendarEvents() {
   renderCalendarEvents(laid_out_events);
 }
 
+renderCalenderLabels()
 getCalendarEvents();
