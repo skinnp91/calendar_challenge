@@ -221,7 +221,6 @@ function layOutDay(events) {
     formatted_events.push(event);
   }
   formatted_events = setWidthAndLeft(formatted_events, max_width);
-  console.log(formatted_events);
   return formatted_events;
 }
 
@@ -247,7 +246,6 @@ function formatCalendarEvents(event_dict) {
         start: event.start,
         end: event.end
       });
-//      console.log(event_id + " " + convertMinutes(event.start) + " to " + convertMinutes(event.end));
     }
   }
   
