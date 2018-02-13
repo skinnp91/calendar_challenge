@@ -38,7 +38,7 @@ function renderCalenderLabels() {
     if (i < max_time) {
       label_html = document.createElement("div");
       label_html.classList.add("calendar-label");
-      var time = document.createTextNode(((i-1)%12 + 1) + ":30" + am_pm_label);
+      var time = document.createTextNode(((i-1)%12 + 1) + ":30");
       label_html.append(time);
       label_wrapper.append(label_html);
     }
