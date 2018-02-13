@@ -280,12 +280,10 @@ function calendarAjax() {
 
 function testCalendar(num_events) {
   var events = {};
-
   num_events = num_events || 10;
   for (var i = 0; i < num_events; i++) {
     var start = Math.floor(Math.random() * 700);
     var end = Math.floor(start + Math.random() * (720 - start));
-    console.log(start, end);
     events[i] = {start: start, end: end};
     console.log(i + " " + convertMinutes(start) + " to " + convertMinutes(end));
   }
