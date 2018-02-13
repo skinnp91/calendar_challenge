@@ -280,19 +280,16 @@ function calendarAjax() {
   xhttp.send();
 }
 
-function testCalendar(fixed_events, num_events) {
+function testCalendar(num_events) {
   var events = {};
-  if (fixed_events) {
-    events = fixed_events;
-  } else {
-    num_events = num_events || 10;
-    for (var i = 0; i < num_events; i++) {
-      var start = Math.floor(Math.random() * 700);
-      var end = Math.floor(start + Math.random() * (720 - start));
-      console.log(start, end);
-      events[i] = {start: start, end: end};
-      console.log(i + " " + convertMinutes(start) + " to " + convertMinutes(end));
-    }
+
+  num_events = num_events || 10;
+  for (var i = 0; i < num_events; i++) {
+    var start = Math.floor(Math.random() * 700);
+    var end = Math.floor(start + Math.random() * (720 - start));
+    console.log(start, end);
+    events[i] = {start: start, end: end};
+    console.log(i + " " + convertMinutes(start) + " to " + convertMinutes(end));
   }
 
   var calendar_body = document.getElementById("calendar-body");
@@ -301,15 +298,6 @@ function testCalendar(fixed_events, num_events) {
   var formatted_events = formatCalendarEvents(events);
   var laid_out_events = layOutDay(formatted_events);
   renderCalendarEvents(laid_out_events);
-}
-
-function fixedTest() {
-  var events = {
-    0: {start: 119, end: 656},
-    1: {start: 192, end: 567},
-    2: {start: 557, end: 604}
-  }
-  testCalendar(events);
 }
 
 renderCalenderLabels()
