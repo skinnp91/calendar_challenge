@@ -5,6 +5,7 @@
 *
 * @return string Date HH:MM XX string of time
 */
+
 function convertMinutes(minutes) {
   var hours = Math.floor(minutes/60) + 9;
   var minutes_past = minutes % 60;
@@ -14,9 +15,11 @@ function convertMinutes(minutes) {
   return ((hours-1) % 12 + 1) + ":" + minutes_past + ampm;
 }
 
+
 /**
 * renders calendar time labels
 */
+
 function renderCalenderLabels() {
   var label_wrapper = document.getElementById("calendar-side-bar");
   var min_time = 9;
@@ -26,8 +29,9 @@ function renderCalenderLabels() {
     var label_html = document.createElement("div");
     label_html.classList.add("calendar-label");
     var bold_time = document.createElement("span");
+    var hour = (i-1)%12 + 1; // - 1 + 1 to account for 12pm
     var am_pm_label = i > 11 ? " PM" : " AM";
-    bold_time.append(document.createTextNode(((i-1)%12 + 1) + ":00"));
+    bold_time.append(document.createTextNode(hour + ":00"));
     var ampm = document.createTextNode(am_pm_label);
     label_html.append(bold_time);
     label_html.append(ampm);
@@ -38,12 +42,13 @@ function renderCalenderLabels() {
     if (i < max_time) {
       label_html = document.createElement("div");
       label_html.classList.add("calendar-label");
-      var time = document.createTextNode(((i-1)%12 + 1) + ":30");
+      var time = document.createTextNode(hour + ":30");
       label_html.append(time);
       label_wrapper.append(label_html);
     }
   }
 }
+
 
 /**
 * Renders event elements on calendar
@@ -52,6 +57,7 @@ function renderCalenderLabels() {
 *
 * @return object  Status object with success boolean and string message.
 */
+
 function renderCalendarEvents(events) {
   var calendar_body = document.getElementById("calendar-body");
   
@@ -81,6 +87,7 @@ function renderCalendarEvents(events) {
 *
 * @return number Total depth of collisions
 */
+
 function countCollisions(events, starting_index, event, collision_number, depth, max_width) {
   var collisions = collision_number;
   for (var i = starting_index; i < events.length; i++) {
@@ -180,41 +187,23 @@ function formatCalendarEvents(event_dict) {
 /**
 * Call API to get calendar events
 *
-* @return object An object with id -> start/end groups. Start and end
-*                time are measured in minutes from 9am. The
-*                start and end time of each event will be [0, 720]. The start time will 
-*                be less than the end time.
+* On Success, format and render events
 */
+
 function calendarAjax() {
-  /* Insert AJAX Here
-   *
-   *
-   *
-   *
-   *
-   *
-   */
-    // Temp event list
-    var calendar_events = {
-      "-K2rlJ-nkJBtkLHL0QmO": {"end":150,"start":30},
-      "-K2rlKbFfXz3OEoxRBJU": {"end":650,"start":540},
-      "-K2rlLd-VjcZ_rtBlVuM": {"end":620,"start":560},
-      "-K2rlMb_GD98QiMk8zGF": {"end":700,"start":630}
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.status = 200 && this.responseText) {
+      var calendar_events = JSON.parse(this.responseText);
+      var formatted_events = formatCalendarEvents(calendar_events);
+      var laid_out_events = layOutDay(formatted_events);
+      renderCalendarEvents(laid_out_events);
     }
-    return calendar_events;
-}
+  }
 
-
-/**
-* Get, format, and render calendar events
-*/
-
-function getCalendarEvents() {
-  var calendar_events = calendarAjax();
-  var formatted_events = formatCalendarEvents(calendar_events);
-  var laid_out_events = layOutDay(formatted_events);
-  renderCalendarEvents(laid_out_events);
+  xhttp.open("GET", "https://appcues-interviews.firebaseio.com/calendar/events.json", true);
+  xhttp.send();
 }
 
 renderCalenderLabels()
-getCalendarEvents();
+calendarAjax();
