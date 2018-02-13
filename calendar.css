@@ -59,6 +59,7 @@ Calendar Body: #ececec
   background: white;
   border: 1px solid #dddddd;
   border-left: 5px solid #4b6ea8;
+  overflow: hidden;
 }
 
 .calendar-event .event-title {

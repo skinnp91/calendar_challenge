@@ -68,38 +68,114 @@ function renderCalendarEvents(events) {
     event.innerHTML = '<div class="event-title">Sample Item</div><div class="event-descr">Sample Location</div>';
     event.style.top = events[i].start + "px";
     event.style.left = (events[i].left + 10) + "px"; // plus 10 to account for padding
-    event.style.height = (events[i].height - 22) + "px"; // minus 2 to account for borders and 20 to account for padding
-    event.style.width = (events[i].width - 26) + "px"; // minus 5 for left border, 1 for right border, 20 for padding
+    event.style.height = (events[i].height > 22 ? events[i].height - 22 : 0) + "px"; // minus 2 to account for borders and 20 to account for padding
+    event.style.width = (events[i].width > 26 ? events[i].width - 26 : 0) + "px"; // minus 5 for left border, 1 for right border, 20 for padding
     calendar_body.appendChild(event);
   }
 }
 
 
 /**
-* Recursively check for event collisions
+* Checks to see if two events collide times
 *
-* @param array  events           An array of event objects.
-* @param number starting_index   Where to start looking for collisions.
-* @param object event            New event being checked against for collisions
-* @param number collision_number Number of collisions to this point
-* @param number depth            Sets how far right to put the event based on collision index
-* @param number max_width        Maximum width of parent box
+* @param object  eventA   First object to check
+* @param object  eventB   Second object to check
 *
-* @return number Total depth of collisions
+* @return boolean whether the events collide or not
 */
 
-function countCollisions(events, starting_index, event, collision_number, depth, max_width) {
-  var collisions = collision_number;
-  for (var i = starting_index; i < events.length; i++) {
-    var checked_event = events[i];
-    if ( (checked_event.start < event.start && checked_event.end > event.start) ||
-           (checked_event.end > event.end && checked_event.start < event.end) ) {
-      collisions = countCollisions(events, i+1, event, collision_number+1, depth+1, max_width);
-      checked_event.width = Math.round(max_width / (collisions + 1));
-      checked_event.left = checked_event.width * depth;
+function collides(eventA, eventB) {
+  return (eventA.start <= eventB.start && eventA.end > eventB.start) ||
+         (eventB.start <= eventA.start && eventB.end > eventA.start);
+}
+
+
+/**
+* Recursively build event collision tree off the event index specified.
+*
+* @param array  events       An array of events.
+* @param number event_index  Index of starting event
+* @param number max_width    Max width of calendar events
+* @param number curr_depth   Current depth of tree branches
+*
+* @return object  indexes of events added to tree & max depth of tree branches
+*/
+
+function collisionTreeBuild(events, event_index, max_width, curr_depth) {
+  var ret_data = {collision_indexes: [], max_depth: curr_depth}; // indexes & max depth
+  var event = events[event_index];
+  event.curr_depth = curr_depth;
+  console.log(event);
+  for(var i = event_index+1; i < events.length; i++) {
+    if (!events[i].parent_node && collides(events[i], event)) {
+      // Check if you can truncate the tree depth
+      var send_depth = curr_depth + 1;
+      var has_truncated = false;
+      if (curr_depth > 1) { // has 2 parents
+        var tracked_event = event.parent_node;
+        while(tracked_event.parent_node) {
+          if (!collides(tracked_event.parent_node, event)) {
+            curr_depth = tracked_event.parent_node.curr_depth;
+            has_truncated = true;
+          }
+          tracked_event = tracked_event.parent_node;
+        }
+      }
+
+      // By truncating tree, we remove the need to go deeper
+      if (has_truncated)
+        send_depth--;
+
+      events[i].parent_node = event;
+      var collision = collisionTreeBuild(events, i, max_width, send_depth);
+
+
+      ret_data.max_depth = Math.max(ret_data.max_depth, collision.max_depth);
+      for (var j = 0; j < collision.collision_indexes.length; j++)
+        ret_data.collision_indexes.push(collision.collision_indexes[j]);
     }
   }
-  return collisions;
+  event.width = Math.round(max_width / (ret_data.max_depth+1));
+  if (!event.width)
+    console.log(event);
+  event.left = event.curr_depth * event.width;
+  ret_data.collision_indexes.push(event_index);
+  return ret_data;
+}
+
+
+/**
+* Sets the width and left attributes of passed through calendar events. attributes are set in place,
+* but final array is also passed.
+*
+* @param array  events     An array of events.
+* @param number max_width  Maximum allowed width for events
+*
+* @return array events     Events with width and left attributes set.
+*/
+
+function setWidthAndLeft(events, max_width) {
+  var unused_events = [];
+
+  // shallow copy events array
+  for (var i = 0; i < events.length; i++) {
+    unused_events.push(events[i]);
+  }
+
+  var tree = [];
+  while(unused_events.length) {
+    // Set width and left -- return indexes of set items
+    var ret_data = collisionTreeBuild(unused_events, 0, max_width, 0);
+    var remove_indexes = ret_data.collision_indexes.sort(function(a,b) {
+      return b-a;
+    });
+
+    // Remove known branches to speed up process
+    for (var i = 0; i < remove_indexes.length; i++)
+      unused_events.splice(events[remove_indexes[i]], 1);
+  }
+
+  return events;
 }
 
 
@@ -137,16 +213,11 @@ function layOutDay(events) {
       start: events[i].start,
       end: events[i].end,
       height: events[i].end - events[i].start,
-      width: max_width,
-      left: 0,
     }
-    
-    var collisions = countCollisions(formatted_events, 0, event, 0, 0, max_width);
-    event.width = Math.round(max_width / (collisions + 1));
-    event.left = event.width * collisions;
     formatted_events.push(event);
   }
-  
+  formatted_events = setWidthAndLeft(formatted_events, max_width);
+  console.log(formatted_events);
   return formatted_events;
 }
 
@@ -172,7 +243,7 @@ function formatCalendarEvents(event_dict) {
         start: event.start,
         end: event.end
       });
-      console.log(event_id + " " + convertMinutes(event.start) + " to " + convertMinutes(event.end));
+//      console.log(event_id + " " + convertMinutes(event.start) + " to " + convertMinutes(event.end));
     }
   }
   
@@ -203,6 +274,38 @@ function calendarAjax() {
 
   xhttp.open("GET", "https://appcues-interviews.firebaseio.com/calendar/events.json", true);
   xhttp.send();
+}
+
+function testCalendar(fixed_events, num_events) {
+  var events = {};
+  if (fixed_events) {
+    events = fixed_events;
+  } else {
+    num_events = num_events || 10;
+    for (var i = 0; i < num_events; i++) {
+      var start = Math.floor(Math.random() * 700);
+      var end = Math.floor(start + Math.random() * (720 - start));
+      console.log(start, end);
+      events[i] = {start: start, end: end};
+      console.log(i + " " + convertMinutes(start) + " to " + convertMinutes(end));
+    }
+  }
+
+  var calendar_body = document.getElementById("calendar-body");
+  calendar_body.innerHTML = '';
+
+  var formatted_events = formatCalendarEvents(events);
+  var laid_out_events = layOutDay(formatted_events);
+  renderCalendarEvents(laid_out_events);
+}
+
+function fixedTest() {
+  var events = {
+    0: {start: 119, end: 656},
+    1: {start: 192, end: 567},
+    2: {start: 557, end: 604}
+  }
+  testCalendar(events);
 }
 
 renderCalenderLabels()
