@@ -1,4 +1,20 @@
 /**
+* Convert number of minutes into time
+*
+* @param number minutes Minutes since 9am
+*
+* @return string Date HH:MM XX string of time
+*/
+function convertMinutes(minutes) {
+  var hours = Math.floor(minutes/60) + 9;
+  var minutes_past = minutes % 60;
+  if (minutes_past < 10)
+    minutes_past = "0" + minutes_past;
+  var ampm = hours > 11 ? " PM" : " AM";
+  return hours % 12 + ":" + minutes_past + ampm;
+}
+
+/**
 * renders calendar time labels
 */
 function renderCalenderLabels() {
@@ -149,6 +165,7 @@ function formatCalendarEvents(event_dict) {
         start: event.start,
         end: event.end
       });
+      console.log(event_id + " " + convertMinutes(event.start) + " to " + convertMinutes(event.end));
     }
   }
   
