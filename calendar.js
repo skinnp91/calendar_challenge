@@ -105,7 +105,6 @@ function collisionTreeBuild(events, event_index, max_width, curr_depth) {
   var ret_data = {collision_indexes: [], max_depth: curr_depth}; // indexes & max depth
   var event = events[event_index];
   event.curr_depth = curr_depth;
-  console.log(event);
   for(var i = event_index+1; i < events.length; i++) {
     if (!events[i].parent_node && collides(events[i], event)) {
       // Check if you can truncate the tree depth
@@ -113,12 +112,14 @@ function collisionTreeBuild(events, event_index, max_width, curr_depth) {
       var has_truncated = false;
       if (curr_depth > 1) { // has 2 parents
         var tracked_event = event.parent_node;
+        console.log(tracked_event);
         while(tracked_event.parent_node) {
           if (!collides(tracked_event.parent_node, event)) {
-            curr_depth = tracked_event.parent_node.curr_depth;
+            event.curr_depth = tracked_event.parent_node.curr_depth;
             has_truncated = true;
           }
           tracked_event = tracked_event.parent_node;
+          console.log(has_truncated, event.curr_depth);
         }
       }
 
@@ -135,10 +136,6 @@ function collisionTreeBuild(events, event_index, max_width, curr_depth) {
         ret_data.collision_indexes.push(collision.collision_indexes[j]);
     }
   }
-  event.width = Math.round(max_width / (ret_data.max_depth+1));
-  if (!event.width)
-    console.log(event);
-  event.left = event.curr_depth * event.width;
   ret_data.collision_indexes.push(event_index);
   return ret_data;
 }
@@ -171,8 +168,11 @@ function setWidthAndLeft(events, max_width) {
     });
 
     // Remove known branches to speed up process
-    for (var i = 0; i < remove_indexes.length; i++)
-      unused_events.splice(events[remove_indexes[i]], 1);
+    for (var i = 0; i < remove_indexes.length; i++) {
+      unused_events[remove_indexes[i]].width = Math.round(max_width / (ret_data.max_depth+1));
+      unused_events[remove_indexes[i]].left = unused_events[remove_indexes[i]].curr_depth * unused_events[remove_indexes[i]].width;
+      unused_events.splice(remove_indexes[i], 1);
+    }
   }
 
   return events;
