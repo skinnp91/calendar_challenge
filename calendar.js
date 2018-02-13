@@ -11,7 +11,7 @@ function convertMinutes(minutes) {
   if (minutes_past < 10)
     minutes_past = "0" + minutes_past;
   var ampm = hours > 11 ? " PM" : " AM";
-  return hours % 12 + ":" + minutes_past + ampm;
+  return ((hours-1) % 12 + 1) + ":" + minutes_past + ampm;
 }
 
 /**
