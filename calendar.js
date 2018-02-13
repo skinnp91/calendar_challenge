@@ -27,7 +27,7 @@ function renderCalenderLabels() {
     label_html.classList.add("calendar-label");
     var bold_time = document.createElement("span");
     var am_pm_label = i > 11 ? " PM" : " AM";
-    bold_time.append(document.createTextNode(i%12 + ":00"));
+    bold_time.append(document.createTextNode(((i-1)%12 + 1) + ":00"));
     var ampm = document.createTextNode(am_pm_label);
     label_html.append(bold_time);
     label_html.append(ampm);
@@ -38,7 +38,7 @@ function renderCalenderLabels() {
     if (i < max_time) {
       label_html = document.createElement("div");
       label_html.classList.add("calendar-label");
-      var time = document.createTextNode(i%12 + ":30" + am_pm_label);
+      var time = document.createTextNode(((i-1)%12 + 1) + ":30" + am_pm_label);
       label_html.append(time);
       label_wrapper.append(label_html);
     }
