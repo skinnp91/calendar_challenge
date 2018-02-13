@@ -4,7 +4,7 @@
 function renderCalenderLabels() {
   var label_wrapper = document.getElementById("calendar-side-bar");
   var min_time = 9;
-  var max_time = 18;
+  var max_time = 21;
   for (var i = min_time; i <= max_time; i++) {
     // Hour
     var label_html = document.createElement("div");
