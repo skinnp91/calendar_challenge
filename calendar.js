@@ -92,6 +92,7 @@ function collides(eventA, eventB) {
 
 /**
 * Recursively build event collision tree off the event index specified.
+* SIDE EFFECT: Set curr_depth of each event.
 *
 * @param array  events       An array of events.
 * @param number event_index  Index of starting event
@@ -102,34 +103,37 @@ function collides(eventA, eventB) {
 */
 
 function collisionTreeBuild(events, event_index, max_width, curr_depth) {
-  var ret_data = {collision_indexes: [], max_depth: curr_depth}; // indexes & max depth
   var event = events[event_index];
+  var send_depth = curr_depth + 1;
+
+  // Check to see if event can be placed further left
   event.curr_depth = curr_depth;
+  if (event.parent_node) {
+    var tracked_event = event.parent_node;
+    var collision_depth = [];
+    while(tracked_event) {
+      if (collides(tracked_event, event)) {
+        if (collision_depth.indexOf(tracked_event.curr_depth) < 0)
+          collision_depth.push(tracked_event.curr_depth);
+      }
+      tracked_event = tracked_event.parent_node;
+    }
+    for (var i = 0; i < curr_depth; i++) {
+      if (collision_depth.indexOf(i) < 0) {
+        event.curr_depth = i;
+        // By truncating tree, we remove the need to go further right
+        send_depth--;
+        break;
+      }
+    }
+  }
+  var ret_data = {collision_indexes: [], max_depth: event.curr_depth}; // indexes & max depth
+
+  // iterate remaining events to check collisions
   for(var i = event_index+1; i < events.length; i++) {
     if (!events[i].parent_node && collides(events[i], event)) {
-      // Check if you can truncate the tree depth
-      var send_depth = curr_depth + 1;
-      var has_truncated = false;
-      if (curr_depth > 1) { // has 2 parents
-        var tracked_event = event.parent_node;
-        console.log(tracked_event);
-        while(tracked_event.parent_node) {
-          if (!collides(tracked_event.parent_node, event)) {
-            event.curr_depth = tracked_event.parent_node.curr_depth;
-            has_truncated = true;
-          }
-          tracked_event = tracked_event.parent_node;
-          console.log(has_truncated, event.curr_depth);
-        }
-      }
-
-      // By truncating tree, we remove the need to go deeper
-      if (has_truncated)
-        send_depth--;
-
       events[i].parent_node = event;
       var collision = collisionTreeBuild(events, i, max_width, send_depth);
-
 
       ret_data.max_depth = Math.max(ret_data.max_depth, collision.max_depth);
       for (var j = 0; j < collision.collision_indexes.length; j++)
@@ -159,7 +163,6 @@ function setWidthAndLeft(events, max_width) {
     unused_events.push(events[i]);
   }
 
-  var tree = [];
   while(unused_events.length) {
     // Set width and left -- return indexes of set items
     var ret_data = collisionTreeBuild(unused_events, 0, max_width, 0);
@@ -169,8 +172,9 @@ function setWidthAndLeft(events, max_width) {
 
     // Remove known branches to speed up process
     for (var i = 0; i < remove_indexes.length; i++) {
-      unused_events[remove_indexes[i]].width = Math.round(max_width / (ret_data.max_depth+1));
-      unused_events[remove_indexes[i]].left = unused_events[remove_indexes[i]].curr_depth * unused_events[remove_indexes[i]].width;
+      var event = unused_events[remove_indexes[i]];
+      event.width = Math.round(max_width / (ret_data.max_depth+1));
+      event.left = event.curr_depth * event.width;
       unused_events.splice(remove_indexes[i], 1);
     }
   }
